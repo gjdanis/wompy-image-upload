@@ -1,0 +1,14 @@
+{
+    "name": "wompy-image-upload",
+    "version": "1.0.0",
+    "description": "Lambda function called by the Wompy frontend to upload data to S3",
+    "main": "src/app.js",
+    "scripts": {
+        "clean": "rm -rf .aws-sam",
+        "build": "npm run clean && sam build",
+        "deploy": "npm run build && sam deploy"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.1423.0"
+    }
+}

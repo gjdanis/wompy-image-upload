@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda function to upload data to S3
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs18.x
+
+Resources:
+  UploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/app.handler
+      CodeUri: .
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref UploadBucket
+      Policies:
+        - AWSLambdaBasicExecutionRole  # CloudWatch Logs permissions
+        - Statement:
+            - Effect: Allow
+              Action: 
+                - s3:PutObject
+                - s3:GetObject
+                - s3:ListBucket
+              Resource:
+                - !Sub "arn:aws:s3:::${UploadBucket}"
+                - !Sub "arn:aws:s3:::${UploadBucket}/*"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
+            RestApiId: !Ref UploadApi
+
+  UploadApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'POST,OPTIONS'"
+        AllowHeaders: "'Content-Type'"
+        AllowOrigin: "'*'"
+
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "wompy-image-upload-bucket-${AWS::AccountId}"
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${UploadApi}.execute-api.${AWS::Region}.amazonaws.com/prod/upload"
