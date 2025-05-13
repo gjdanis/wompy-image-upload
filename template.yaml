@@ -11,8 +11,8 @@ Resources:
   UploadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/app.handler
-      CodeUri: .
+      Handler: src/upload.handler
+      CodeUri: ./src
       Environment:
         Variables:
           BUCKET_NAME: !Ref UploadBucket
@@ -32,7 +32,27 @@ Resources:
           Type: Api
           Properties:
             Path: /upload
-            Method: post
+            Method: POST
+            RestApiId: !Ref UploadApi
+
+  GetImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GetImageFunction
+      Handler: get.handler
+      CodeUri: ./src
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref UploadBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref UploadBucket
+      Events:
+        GetAPI:
+          Type: Api
+          Properties:
+            Path: /objects
+            Method: GET
             RestApiId: !Ref UploadApi
 
   UploadApi:
@@ -40,7 +60,7 @@ Resources:
     Properties:
       StageName: prod
       Cors:
-        AllowMethods: "'POST,OPTIONS'"
+        AllowMethods: "'GET,POST,OPTIONS'"
         AllowHeaders: "'Content-Type'"
         AllowOrigin: "'*'"
 
@@ -52,4 +72,4 @@ Resources:
 Outputs:
   ApiUrl:
     Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${UploadApi}.execute-api.${AWS::Region}.amazonaws.com/prod/upload"
+    Value: !Sub "https://${UploadApi}.execute-api.${AWS::Region}.amazonaws.com/prod"

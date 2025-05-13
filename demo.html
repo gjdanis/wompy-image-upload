@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Upload & Load Image via Lambda</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+        }
+
+        img {
+            max-width: 300px;
+            margin-top: 1rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Image Upload to S3 via Lambda</h2>
+
+    <!-- Upload Section -->
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="uploadToLambda()">Upload Image</button>
+
+    <p id="uploadStatus"></p>
+
+    <!-- Load Section -->
+    <button onclick="loadImageFromLambda()">Load Image</button>
+    <img id="loadedImage" src="" alt="Loaded image will appear here">
+
+    <script>
+        const BASE_URL = "https://cik131xs98.execute-api.us-east-2.amazonaws.com/prod";
+
+        let uploadedKey = null; // Save the key to load the image later
+
+        async function uploadToLambda() {
+            const input = document.getElementById('imageInput');
+            const status = document.getElementById('uploadStatus');
+            if (!input.files.length) {
+                alert("Please select an image.");
+                return;
+            }
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function () {
+                const base64Content = reader.result.split(',')[1];
+                const payload = {
+                    filename: file.name,
+                    content: base64Content
+                };
+
+                try {
+                    const response = await fetch(`${BASE_URL}/upload`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || "Unknown error");
+
+                    uploadedKey = result.key;
+                    status.textContent = "Image uploaded! S3 Key: " + uploadedKey;
+                } catch (err) {
+                    console.error("Upload failed:", err);
+                    alert("Upload error: " + err.message);
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+        async function loadImageFromLambda() {
+            if (!uploadedKey) {
+                alert("No uploaded image key found. Upload an image first.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/objects?key=${encodeURIComponent(uploadedKey)}`);
+                if (!response.ok) throw new Error("Image not found.");
+
+                const base64 = await response.text();
+                const contentType = response.headers.get("Content-Type");
+                const dataUrl = `data:${contentType};base64,${base64}`;
+
+                const img = document.getElementById('loadedImage');
+                img.src = dataUrl;
+                img.alt = "Loaded image";
+            } catch (err) {
+                console.error("Load error:", err);
+                alert("Error loading image: " + err.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

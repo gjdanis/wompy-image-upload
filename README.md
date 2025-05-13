@@ -1,10 +1,10 @@
 # wompy-image-upload
 
-This project defines a Lambda function that accepts JSON via an API Gateway endpoint and writes it to an S3 bucket.
+This project defines two AWS Lambda functions behind an API gateway that allow a user to upload and fetch images. The images are ultimately saved in an S3 bucket.
 
 ## Stack Resources
 
-This project will setup the following infrastructure:
+The code will setup the following infrastructure:
 
 * An S3 bucket prefixed by `wompy-image-upload-bucket`
 * Lambda function to connect to S3 and write to the bucket
@@ -22,22 +22,4 @@ If at any point you want to rebuild the infrastructure, you can delete the stack
 
 ## Testing
 
-Right now there are no unit tests. After deploying, copy the URL from the "Outputs" section and run the following:
-
-```bash
-curl -X POST <URL FROM OUTPUT> \
--H "Content-Type: application/json" \ 
--d '{"filename": "hello.txt", "body": "Hey Jack, Joe here."}'
-```
-
-Example:
-
-```
-curl -X POST https://cik131xs98.execute-api.us-east-2.amazonaws.com/prod/upload \
-  -H "Content-Type: application/json" \
-  -d '{"filename": "hello.txt", "body": "Hey Jack, Joe here."}'
-
-{"message":"Upload successful"}%   
-```
-
-You should see a successful response and data in the bucket.
+Right now there are no unit tests but you can open the `demo.html` file and test uploading and fetching an image from the bucket.
